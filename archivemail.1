@@ -1,0 +1,728 @@
+'\" t
+.\"     Title: archivemail
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
+.\"      Date: 5 July 2011
+.\"    Manual: archivemail user manual
+.\"    Source: archivemail 0.9.0
+.\"  Language: English
+.\"
+.TH "ARCHIVEMAIL" "1" "5 July 2011" "archivemail 0\&.9\&.0" "archivemail user manual"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+archivemail \- archive and compress your old email
+.SH "SYNOPSIS"
+.HP \w'\fBarchivemail\fR\ 'u
+\fBarchivemail\fR [\fBoptions\fR] {\fIMAILBOX\fR...}
+.SH "DESCRIPTION"
+.PP
+
+\fBarchivemail\fR
+is a tool for archiving and compressing old email in mailboxes\&. By default it will read the mailbox
+\fIMAILBOX\fR, moving messages that are older than the specified number of days (180 by default) to a
+\fBmbox\fR(5)\-format mailbox in the same directory that is compressed with
+\fBgzip\fR(1)\&. It can also just delete old email rather than archive it\&.
+.PP
+By default,
+\fBarchivemail\fR
+derives the archive filename from the mailbox name by appending an
+_archive
+suffix to the mailbox name\&. For example, if you run
+\fBarchivemail\fR
+on a mailbox called
+exsouthrock, the archive will be created with the filename
+exsouthrock_archive\&.gz\&. This default behavior can be overridden with command line options, choosing a custom suffix, a prefix, or a completely custom name for the archive\&.
+.PP
+
+\fBarchivemail\fR
+supports reading
+IMAP,
+Maildir,
+MH
+and
+mbox\-format mailboxes, but always writes
+mbox\-format archives\&.
+.PP
+Messages that are flagged important are not archived or deleted unless explicitly requested with the
+\fB\-\-include\-flagged\fR
+option\&. Also,
+\fBarchivemail\fR
+can be configured not to archive unread mail, or to only archive messages larger than a specified size\&.
+.PP
+To archive an
+IMAP\-format mailbox, use the format
+\fIimap://username:password@server/mailbox \fR
+to specify the mailbox\&.
+\fBarchivemail\fR
+will expand wildcards in
+IMAP
+mailbox names according to
+[RFC 3501], which says:
+\(lqThe character "*" is a wildcard, and matches zero or more characters at this position\&. The character "%" is similar to "*", but it does not match a hierarchy delimiter\&.\(rq
+You can omit the password from the
+URL; use the
+\fB\-\-pwfile\fR
+option to make
+\fBarchivemail\fR
+read the password from a file, or alternatively just enter it upon request\&. If the
+\fB\-\-pwfile\fR
+option is set,
+\fBarchivemail\fR
+does not look for a password in the
+URL, and the colon is not considered a delimiter\&. Substitute
+\fIimap\fR
+with
+\fIimaps\fR, and
+\fBarchivemail\fR
+will establish a secure
+SSL
+connection\&. See below for more
+IMAP
+peculiarities\&.
+.SH "OPTIONS"
+.PP
+\fB\-d \fR\fB\fINUM\fR\fR, \fB\-\-days=\fR\fB\fINUM\fR\fR
+.RS 4
+Archive messages older than
+\fINUM\fR
+days\&. The default is 180\&. This option is incompatible with the
+\fB\-\-date\fR
+option below\&.
+.RE
+.PP
+\fB\-D \fR\fB\fIDATE\fR\fR, \fB\-\-date=\fR\fB\fIDATE\fR\fR
+.RS 4
+Archive messages older than
+\fIDATE\fR\&.
+\fIDATE\fR
+can be a date string in ISO format (eg
+\(lq2002\-04\-23\(rq), Internet format (eg
+\(lq23 Apr 2002\(rq) or Internet format with full month names (eg
+\(lq23 April 2002\(rq)\&. Two\-digit years are not supported\&. This option is incompatible with the
+\fB\-\-days\fR
+option above\&.
+.RE
+.PP
+\fB\-o \fR\fB\fIPATH\fR\fR, \fB\-\-output\-dir=\fR\fB\fIPATH\fR\fR
+.RS 4
+Use the directory name
+\fIPATH\fR
+to store the mailbox archives\&. The default is the same directory as the mailbox to be read\&.
+.RE
+.PP
+\fB\-P \fR\fB\fIFILE\fR\fR, \fB\-\-pwfile=\fR\fB\fIFILE\fR\fR
+.RS 4
+Read
+IMAP
+password from file
+\fIFILE\fR
+instead of from the command line\&. Note that this will probably not work if you are archiving folders from more than one IMAP account\&.
+.RE
+.PP
+\fB\-F \fR\fB\fISTRING\fR\fR, \fB\-\-filter\-append=\fR\fB\fISTRING\fR\fR
+.RS 4
+Append
+\fISTRING\fR
+to the
+IMAP
+filter string\&. For
+IMAP
+wizards\&.
+.RE
+.PP
+\fB\-p \fR\fB\fINAME\fR\fR, \fB\-\-prefix=\fR\fB\fINAME\fR\fR
+.RS 4
+Prefix
+\fINAME\fR
+to the archive name\&.
+\fINAME\fR
+is expanded by the
+\fBpython\fR(1)
+function
+\fBtime\&.strftime()\fR, which means that you can specify special directives in
+\fINAME\fR
+to make an archive named after the archive cut\-off date\&. See the discussion of the
+\fB\-\-suffix\fR
+option for a list of valid
+\fBstrftime()\fR
+directives\&. The default is not to add a prefix\&.
+.RE
+.PP
+\fB\-s \fR\fB\fINAME\fR\fR, \fB\-\-suffix=\fR\fB\fINAME\fR\fR
+.RS 4
+Use the suffix
+\fINAME\fR
+to create the filename used for archives\&. The default is
+_archive, unless a prefix is specified\&.
+.sp
+Like a prefix, the suffix
+\fINAME\fR
+is expanded by the
+\fBpython\fR(1)
+function
+\fBtime\&.strftime()\fR
+with the archive cut\-off date\&.
+\fBtime\&.strftime()\fR
+understands the following directives:
+.TP
+%a
+Locale\*(Aqs abbreviated weekday name\&.
+.TP
+%A
+Locale\*(Aqs full weekday name\&.
+.TP
+%b
+Locale\*(Aqs abbreviated month name\&.
+.TP
+%B
+Locale\*(Aqs full month name\&.
+.TP
+%c
+Locale\*(Aqs appropriate date and time representation\&.
+.TP
+%d
+Day of the month as a decimal number [01,31]\&.
+.TP
+%H
+Hour (24\-hour clock) as a decimal number [00,23]\&.
+.TP
+%I
+Hour (12\-hour clock) as a decimal number [01,12]\&.
+.TP
+%j
+Day of the year as a decimal number [001,366]\&.
+.TP
+%m
+Month as a decimal number [01,12]\&.
+.TP
+%M
+Minute as a decimal number [00,59]\&.
+.TP
+%p
+Locale\*(Aqs equivalent of either AM or PM\&.
+.TP
+%S
+Second as a decimal number [00,61]\&. (1)
+.TP
+%U
+Week number of the year (Sunday as the first day of the week) as a decimal number [00,53]\&. All days in a new year preceding the first Sunday are considered to be in week 0\&.
+.TP
+%w
+Weekday as a decimal number [0(Sunday),6]\&.
+.TP
+%W
+Week number of the year (Monday as the first day of the week) as a decimal number [00,53]\&. All days in a new year preceding the first Sunday are considered to be in week 0\&.
+.TP
+%x
+Locale\*(Aqs appropriate date representation\&.
+.TP
+%X
+Locale\*(Aqs appropriate time representation\&.
+.TP
+%y
+Year without century as a decimal number [00,99]\&.
+.TP
+%Y
+Year with century as a decimal number\&.
+.TP
+%Z
+Time zone name (or by no characters if no time zone exists)\&.
+.TP
+%%
+A literal
+\(lq%\(rq
+character\&.
+.sp
+.RE
+.PP
+\fB\-a \fR\fB\fINAME\fR\fR, \fB\-\-archive\-name=\fR\fB\fINAME\fR\fR
+.RS 4
+Use
+\fINAME\fR
+as the archive name, ignoring the name of the mailbox that is archived\&. Like prefixes and suffixes,
+\fINAME\fR
+is expanded by
+\fBtime\&.strftime()\fR
+with the archive cut\-off date\&. Because it hard\-codes the archive name, this option cannot be used when archiving multiple mailboxes\&.
+.RE
+.PP
+\fB\-S \fR\fB\fINUM\fR\fR, \fB\-\-size=\fR\fB\fINUM\fR\fR
+.RS 4
+Only archive messages that are
+\fINUM\fR
+bytes or greater\&.
+.RE
+.PP
+\fB\-n\fR, \fB\-\-dry\-run\fR
+.RS 4
+Don\*(Aqt write to any files \-\- just show what would have been done\&. This is useful for testing to see how many messages would have been archived\&.
+.RE
+.PP
+\fB\-u\fR, \fB\-\-preserve\-unread\fR
+.RS 4
+Do not archive any messages that have not yet been read\&.
+\fBarchivemail\fR
+determines if a message in a
+mbox\-format or
+MH\-format mailbox has been read by looking at the
+Status
+header (if it exists)\&. If the status header is equal to
+\(lqRO\(rq
+or
+\(lqOR\(rq
+then
+\fBarchivemail\fR
+assumes the message has been read\&.
+\fBarchivemail\fR
+determines if a
+maildir
+message has been read by looking at the filename\&. If the filename contains an
+\(lqS\(rq
+after
+:2,
+then it assumes the message has been read\&.
+.RE
+.PP
+\fB\-\-dont\-mangle\fR
+.RS 4
+Do not mangle lines in message bodies beginning with
+\(lqFrom\ \&\(rq\&. When archiving a message from a mailbox not in
+mbox
+format, by default
+\fBarchivemail\fR
+mangles such lines by prepending a
+\(lq>\(rq
+to them, since mail user agents might otherwise interpret these lines as message separators\&. Messages from
+mbox
+folders are never mangled\&. See
+\fBmbox\fR(5)
+for more information\&.
+.RE
+.PP
+\fB\-\-delete\fR
+.RS 4
+Delete rather than archive old mail\&. Use this option with caution!
+.RE
+.PP
+\fB\-\-copy\fR
+.RS 4
+Copy rather than archive old mail\&. Creates an archive, but the archived messages are not deleted from the originating mailbox, which is left unchanged\&. This is a complement to the
+\fB\-\-delete\fR
+option, and mainly useful for testing purposes\&. Note that multiple passes will create duplicates, since messages are blindly appended to an existing archive\&.
+.RE
+.PP
+\fB\-\-all\fR
+.RS 4
+Archive all messages, without distinction\&.
+.RE
+.PP
+\fB\-\-include\-flagged\fR
+.RS 4
+Normally messages that are flagged important are not archived or deleted\&. If you specify this option, these messages can be archived or deleted just like any other message\&.
+.RE
+.PP
+\fB\-\-no\-compress\fR
+.RS 4
+Do not compress any archives\&.
+.RE
+.PP
+\fB\-\-warn\-duplicate\fR
+.RS 4
+Warn about duplicate
+Message\-IDs that appear in the input mailbox\&.
+.RE
+.PP
+\fB\-v\fR, \fB\-\-verbose\fR
+.RS 4
+Reports lots of extra debugging information about what is going on\&.
+.RE
+.PP
+\fB\-\-debug\-imap=\fR\fB\fINUM\fR\fR
+.RS 4
+Set
+IMAP
+debugging level\&. This makes
+\fBarchivemail\fR
+dump its conversation with the
+IMAP
+server and some internal
+IMAP
+processing to
+stdout\&. Higher values for
+\fINUM\fR
+give more elaborate output\&. Set
+\fINUM\fR
+to 4 to see all exchanged
+IMAP
+commands\&. (Actually,
+\fINUM\fR
+is just passed literally to
+imaplib\&.Debug\&.)
+.RE
+.PP
+\fB\-q\fR, \fB\-\-quiet\fR
+.RS 4
+Turns on quiet mode\&. Do not print any statistics about how many messages were archived\&. This should be used if you are running
+\fBarchivemail\fR
+from cron\&.
+.RE
+.PP
+\fB\-V\fR, \fB\-\-version\fR
+.RS 4
+Display the version of
+\fBarchivemail\fR
+and exit\&.
+.RE
+.PP
+\fB\-h\fR, \fB\-\-help\fR
+.RS 4
+Display brief summary information about how to run
+\fBarchivemail\fR\&.
+.RE
+.SH "NOTES"
+.PP
+
+\fBarchivemail\fR
+requires
+\fBpython\fR(1)
+version 2\&.3 or later\&. When reading an
+mbox\-format mailbox,
+\fBarchivemail\fR
+will create a lockfile with the extension
+\&.lock
+so that
+\fBprocmail\fR(1)
+will not deliver to the mailbox while it is being processed\&. It will also create an advisory lock on the mailbox using
+\fBlockf\fR(2)\&. The archive is locked in the same way when it is updated\&.
+\fBarchivemail\fR
+will also complain and abort if a 3rd\-party modifies the mailbox while it is being read\&.
+.PP
+
+\fBarchivemail\fR
+will always attempt to preserve the last\-access and last\-modify times of the input mailbox\&. Archive mailboxes are always created with a mode of
+0600\&. If
+\fBarchivemail\fR
+finds a pre\-existing archive mailbox it will append rather than overwrite that archive\&.
+\fBarchivemail\fR
+will refuse to operate on mailboxes that are symbolic links\&.
+.PP
+
+\fBarchivemail\fR
+attempts to find the delivery date of a message by looking for valid dates in the following headers, in order of precedence:
+Delivery\-date,
+Received,
+Resent\-Date
+and
+Date\&. If it cannot find any valid date in these headers, it will use the last\-modified file timestamp on
+MH
+and
+Maildir
+format mailboxes, or the date on the
+From_
+line on
+mbox\-format mailboxes\&.
+.PP
+When archiving mailboxes with leading dots in the name,
+\fBarchivemail\fR
+will strip the dots off the archive name, so that the resulting archive file is not hidden\&. This is not done if the
+\fB\-\-prefix\fR
+or
+\fB\-\-archive\-name\fR
+option is used\&. Should there really be mailboxes distinguished only by leading dots in the name, they will thus be archived to the same archive file by default\&.
+.PP
+A conversion from other formats to
+\fBmbox\fR(5)
+will silently overwrite existing
+Status
+and
+X\-Status
+message headers\&.
+.SS "IMAP"
+.PP
+When
+\fBarchivemail\fR
+processes an
+IMAP
+folder, all messages in that folder will have their
+\eRecent
+flag unset, and they will probably not show up as
+\(lqnew\(rq
+in your user agent later on\&. There is no way around this, it\*(Aqs just how
+IMAP
+works\&. This does not apply, however, if you run
+\fBarchivemail\fR
+with the options
+\fB\-\-dry\-run\fR
+or
+\fB\-\-copy\fR\&.
+.PP
+
+\fBarchivemail\fR
+relies on server\-side searches to determine the messages that should be archived\&. When matching message dates,
+IMAP
+servers refer to server internal message dates, and these may differ from both delivery time of a message and its
+Date
+header\&. Also, there exist broken servers which do not implement server side searches\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBIMAP URLs\fR
+.RS 4
+.PP
+
+\fBarchivemail\fR\*(Aqs
+IMAP
+URL
+parser was written with the
+RFC
+2882 (Internet Message Format) rules for the
+local\-part
+of email addresses in mind\&. So, rather than enforcing an
+URL\-style encoding of non\-ascii
+and reserved characters, it allows to double\-quote the username and password\&. If your username or password contains the delimiter characters
+\(lq@\(rq
+or
+\(lq:\(rq, just quote it like this:
+\fIimap://"username@bogus\&.com":"password"@imap\&.bogus\&.com/mailbox\fR\&. You can use a backslash to escape double\-quotes that are part of a quoted username or password\&. Note that quoting only a substring will not work, and be aware that your shell will probably remove unprotected quotes or backslashes\&.
+.PP
+Similarly, there is no need to percent\-encode non\-ascii
+characters in
+IMAP
+mailbox names\&. As long as your locale is configured properly,
+\fBarchivemail\fR
+should handle these without problems\&. Note, however, that due to limitations of the
+IMAP
+protocol, non\-ascii
+characters do not mix well with wildcards in mailbox names\&.
+.PP
+
+\fBarchivemail\fR
+tries to be smart when handling mailbox paths\&. In particular, it will automatically add an
+IMAP
+NAMESPACE
+prefix to the mailbox path if necessary; and if you are archiving a subfolder, you can use the slash as a path separator instead of the
+IMAP
+server\*(Aqs internal representation\&.
+.RE
+.SH "EXAMPLES"
+.PP
+To archive all messages in the mailbox
+debian\-user
+that are older than 180 days to a compressed mailbox called
+debian\-user_archive\&.gz
+in the current directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail debian\-user\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To archive all messages in the mailbox
+debian\-user
+that are older than 180 days to a compressed mailbox called
+debian\-user_October_2001\&.gz
+(where the current month and year is April, 2002) in the current directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-\-suffix \*(Aq_%B_%Y\*(Aq debian\-user\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To archive all messages in the mailbox
+cm\-melb
+that are older than the first of January 2002 to a compressed mailbox called
+cm\-melb_archive\&.gz
+in the current directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-\-date=\*(Aq1 Jan 2002\*(Aq cm\-melb\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Exactly the same as the above example, using an
+ISO
+date format instead:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-\-date=2002\-01\-01 cm\-melb\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To delete all messages in the mailbox
+spam
+that are older than 30 days:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-\-delete \-\-days=30 spam\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To archive all read messages in the mailbox
+incoming
+that are older than 180 days to a compressed mailbox called
+incoming_archive\&.gz
+in the current directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-\-preserve\-unread incoming\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To archive all messages in the mailbox
+received
+that are older than 180 days to an uncompressed mailbox called
+received_archive
+in the current directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-\-no\-compress received\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To archive all mailboxes in the directory
+$HOME/Mail
+that are older than 90 days to compressed mailboxes in the
+$HOME/Mail/Archive
+directory:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-d90 \-o $HOME/Mail/Archive $HOME/Mail/*\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+To archive all mails older than 180 days from the given
+IMAP
+INBOX
+to a compressed mailbox
+INBOX_archive\&.gz
+in the
+$HOME/Mail/Archive
+directory, quoting the password and reading it from the environment variable
+\fBPASSWORD\fR:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-o $HOME/Mail/Archive imaps://user:\*(Aq"\*(Aq$PASSWORD\*(Aq"\*(Aq@example\&.org/INBOX\fR
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Note the protected quotes\&.
+.PP
+To archive all mails older than 180 days in subfolders of
+foo
+on the given
+IMAP
+server to corresponding archives in the current working directory, reading the password from the file
+~/imap\-pass\&.txt:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+bash$ \fBarchivemail \-\-pwfile=~/imap\-pass\&.txt imaps://user@example\&.org/foo/*\fR
+.fi
+.if n \{\
+.RE
+.\}
+.SH "TIPS"
+.PP
+Probably the best way to run
+\fBarchivemail\fR
+is from your
+\fBcrontab\fR(5)
+file, using the
+\fB\-\-quiet\fR
+option\&. Don\*(Aqt forget to try the
+\fB\-\-dry\-run\fR
+and perhaps the
+\fB\-\-copy\fR
+option for non\-destructive testing\&.
+.SH "EXIT STATUS"
+.sp
+Normally the exit status is 0\&. Nonzero indicates an unexpected error\&.
+.SH "BUGS"
+.sp
+If an IMAP mailbox path contains slashes, the archive filename will be derived from the basename of the mailbox\&. If the server\*(Aqs folder separator differs from the Unix slash and is used in the IMAP URL, however, the whole path will be considered the basename of the mailbox\&. E\&.g\&. the two URLs \fBimap://user@example\&.com/folder/subfolder\fR and \fBimap://user@example\&.com/folder\&.subfolder\fR will be archived in subfolder_archive\&.gz and folder\&.subfolder_archive\&.gz, respectively, although they might refer to the same IMAP mailbox\&.
+.sp
+\fBarchivemail\fR does not support reading MMDF or Babyl\-format mailboxes\&. In fact, it will probably think it is reading an mbox\-format mailbox and cause all sorts of problems\&.
+.sp
+\fBarchivemail\fR is still too slow, but if you are running from \fBcrontab\fR(5) you won\*(Aqt care\&. Archiving maildir\-format mailboxes should be a lot quicker than mbox\-format mailboxes since it is less painful for the original mailbox to be reconstructed after selective message removal\&.
+.SH "SEE ALSO"
+\fBmbox\fR(5), \fBcrontab\fR(5), \fBpython\fR(1), \fBprocmail\fR(1)
+.SH "URL"
+.sp
+The \fBarchivemail\fR home page is currently hosted at \m[blue]\fBsourceforge\fR\m[]\&\s-2\u[1]\d\s+2
+.SH "AUTHOR"
+.sp
+This manual page was written by Paul Rodger <paul at paulrodger dot com>\&. Updated and supplemented by Nikolaus Schulz microschulz@web\&.de
+.SH "NOTES"
+.IP " 1." 4
+sourceforge
+.RS 4
+\%http://archivemail.sourceforge.net
+.RE

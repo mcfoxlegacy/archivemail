@@ -1,0 +1,44 @@
+Notable changes in archivemail 0.9.0:
+  
+  * IMAP: support for international mailbox names containing non-ASCII
+    characters.
+
+Notable changes in archivemail 0.8.0:
+
+  * Removed the feature to setuid to the mailbox owners when run as root.
+    This was a bad idea; it's really hard to do safely, if at all possible.
+    Obsoletes: patch #2783134.
+  * New option --archive-name, or short -a, to hard-code an archive filename.
+    Like the --suffix and --prefix options, it is expanded with strftime().
+    This option conflicts with archiving multiple mailboxes.  Closes: feature
+    request #1306538.
+  * New option --prefix, or short -p, to specify an archive name prefix.  Like
+    a suffix specified with the --suffix option, the prefix is expanded with
+    strftime().  Specifying this option disables the default archive name
+    suffix.  Obsoletes: feature request #604281.  (Thanks Serafeim Zanikolas
+    for an initial patch)
+  * New option --all to archive all messages in a mailbox.  Closes: #1764846.
+  * archivemail now expands wildcards in IMAP mailbox names.  For example, the
+    url imaps://user@server/foo/* will expand to all subfolders of foo.
+    Closes: feature request #1978540. Obsoletes: patch #1918937.
+  * To determine the delivery date of a message, archivemail now looks for the
+    timestamp of the latest 'Received' header before resorting to
+    'Resent-Date' or 'Date'.  This should give much better results when there
+    is no 'Delivery-date' header, which is still checked first.
+    (Thanks Andrew Ferrier & Christian Brabandt)
+    Closes: #1481316, #1764855, Debian bug #272666.
+  * We now omit the dotlock if we don't have sufficient permissions to create
+    it in the mbox directory. (The file is still locked with lockf.)
+    Together with more changes under the hood (see below) this means
+    archivemail can now operate on mbox files in the system mail spool.
+    Closes: #855269.
+  * Replaced some simple minded file operation security checks with more
+    decent ones.  This means we can safely operate in /tmp, for example.  The
+    price is that we no longer accept symlinked files.  Obsoletes: patch
+    #1874868.
+  * The archive now also gets locked while archivemail updates it.
+  * mbox locking got completely rewritten.  Switched from flock to lockf
+    locking, which is NFS-safe and portable, and we now lock with lockf first,
+    then with a dotlock, instead of the other way around.  (This is makes
+    archivemail compatible with Debian systems. ;)
+

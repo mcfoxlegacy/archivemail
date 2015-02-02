@@ -1,0 +1,63 @@
+
+-----------------------------------------------------------
+archivemail - archive and compress old mail in your mailbox
+-----------------------------------------------------------
+
+OVERVIEW:
+
+archivemail is a tool written in python(1) for archiving and compressing old
+email in mailboxes. 
+
+It can move messages older than the specified number of days to a separate
+'archive' mbox-format mailbox that is compressed with 'gzip'.
+
+For example, have you been subscribing to the 'linux-kernel' mailing list
+for the last 6 years and ended up with an 160-meg mailbox that 'mutt' is
+taking a long time to load?  'archivemail' can move all messages that are
+older than 6 months to a separate compressed mailbox, and leave you with
+just the most recent messages. 
+
+'archivemail' can save a lot of disk space and will significantly reduce
+overhead on your mail reader. The number of days before mail is considered
+'old' is up to you, but the default is 180 days. You can also archive messages
+by an absolute date or only archive unread messages.
+
+
+REQUIREMENTS:
+
+archivemail requires python version 2.3. It also uses some optional python
+modules, but these should be pretty much standard; if you get an ImportError
+nonetheless, please report it, thanks. (For contact addresses see below.)
+
+Python is available from http://www.python.org/
+
+
+INSTALLATION:
+
+If you want to test archivemail:
+    python test_archivemail
+
+To install archivemail, run:
+    python setup.py install
+
+
+USE:
+
+For more detailed information and examples, look at the archivemail man page.
+
+The best way to run archivemail is from cron, giving the '-q' option to
+archivemail to make it quiet, only printing messages if something went wrong.
+Check out the 'examples' directory for an example shell script to be run from
+cron.
+
+The archivemail website is at: http://archivemail.sourceforge.net/
+
+If you have any feedback or bug reports about archivemail, you are very
+welcome to email the maintainers; as of November 2006, these are:
+
+Nikolaus Schulz <microschulz@web.de>
+Peter Poeml <poeml@suse.de>
+
+
+-- Paul Rodger <paul at paulrodger dot com>, archivemail author
+   Updated by: Nikolaus Schulz, maintainer

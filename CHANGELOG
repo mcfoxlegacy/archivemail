@@ -1,0 +1,333 @@
+version 0.9.0   - 9 July 2011
+
+  * Fixed manpage installation path to be FHS compliant
+  * Speed up IMAP archiving with the --quiet option
+  * Ported the manpage from SGML to XML
+  * Fix test suite failures with Python 2.7.  Closes: #3314293.
+  * IMAP: support international mailbox names containing non-ASCII characters.
+  * IMAP: handle broken servers sending no untagged SEARCH response.
+    Closes: #879716, #3213272.
+  * IMAP: support servers listening on non-standard ports.  Closes: #3168416.
+
+version 0.8.2   - 16 October 2010
+
+  * IMAP: don't prepend NAMESPACE prefix to INBOX and its children.
+    Closes: #3083236.
+
+version 0.8.1   - 30 September 2010
+
+  * IMAP: fixed handling of LIST replies by the server where the mailbox name
+    is not a quoted string. (Thanks Karsten Müller)
+
+Version 0.8.0   - 9 August 2010
+
+  * Fixed date header parsing to be precise with timezone information.  Also,
+    when writing From_ line timestamps, don't use UTC but local time, without
+    timezone information.
+  * To determine the delivery date of a message, archivemail now looks for the
+    timestamp of the latest 'Received' header before resorting to
+    'Resent-Date' or 'Date'.  This should give much better results when there
+    is no 'Delivery-date' header, which is still checked first.
+    (Thanks Andrew Ferrier & Christian Brabandt)
+    Closes: #1481316, #1764855, Debian bug #272666.
+  * If present, the 'Resent-date' header now takes precedence over 'Date'.
+  * IMAP: recognize when a server advertises LOGINDISABLED.
+  * New option --debug-imap; this just sets imaplib.Debug, thereby dumping
+    archivemail's chat with the server to stdout.
+  * Fixed crash with Python 2.5 when archiving an empty maildir.
+    (Thanks "Aidant")  Closes: #1878940.
+  * New option --all to archive all messages in a mailbox.  Closes: #1764846.
+  * Fixed a crash when archiving maildirs with --days=0. (Thanks John Goerzen)
+  * IMAP: automatically add NAMESPACE prefix to a mailbox path if necessary.
+  * Removed the feature to setuid to the mailbox owners when run as root.
+    This was a bad idea; it's really hard to do safely, if at all possible.
+    Obsoletes: patch #2783134.
+  * Replaced some simple minded file operation security checks with more
+    decent ones.  This means we can safely operate in /tmp, for example.  The
+    price is that we no longer accept symlinked files.  Obsoletes: patch
+    #1874868.
+  * Don't use rename() to update mbox files and the archive, but write the
+    files directly.  This is more fragile, but required for correct mbox
+    locking, and also for mboxes in mail spool directories where we don't have
+    permission to create files.  It also means that if selinux is enabled,
+    archivemail now preserves the selinux security context of an mbox.
+    Closes: #2210732.
+  * Fixed the test suite to deal with nanosecond file timestamps.  These are
+    provided by ext4 and XFS, for example.  Closes: #2043900.
+  * Cleaned up the test suite, replacing a lot of duplicated code and avoiding
+    a lot of redundand testing.  This speeds up the test suite by a factor of
+    15 or so.
+  * mbox locking got completely rewritten.  Switched from flock to lockf
+    locking, which is NFS-safe and portable, and we now lock with lockf first,
+    then with a dotlock, instead of the other way around.  (This is makes
+    archivemail compatible with Debian systems. ;)
+  * We now omit the dotlock if we don't have sufficient permissions to create
+    it in the mbox directory. (The file is still locked with lockf.)
+    Since we also no longer use rename() to commit changes to an mbox, (see
+    above) this means archivemail can now operate on mbox files in the system
+    mail spool.  Closes: #855269.
+  * Refactoring of the mbox classes; much of the code got rewritten.
+  * The archive now also gets locked while archivemail updates it.
+  * Various Python language fixes (for example don't use "0" and "1" as
+    boolean constants).
+  * Added a lot of test cases for maildir archiving to the test suite.
+    Maildir testing should now be roughly on par with mbox testing.
+  * IMAP servers (Dovecot and UW-IMAP at least) may store mailbox meta data
+    for mboxes in a pseudo message.  Such messages are now detected and never
+    archived.  Obsoletes: patch #2210707.  (Thanks, "tlhackque")
+  * New option --prefix, or short -p, to specify an archive name prefix.  Like
+    a suffix specified with the --suffix option, the prefix is expanded with
+    strftime().  Specifying this option disables the default archive name
+    suffix.  Obsoletes: feature request #604281.  (Thanks Serafeim Zanikolas
+    for an initial patch)
+  * When archiving a mailbox with a leading dot in the name and with no archive
+    name prefix specified, archivemail no longer creates hidden archives, but
+    strips the dot off the archive name.  In particular, this makes working
+    with Maildir++ subfolders more convenient.  Closes: feature request
+    #604281.
+  * New option --archive-name, or short -a, to hard-code an archive filename.
+    Like the --suffix and --prefix options, it is expanded with strftime().
+    This option conflicts with archiving multiple mailboxes.  Closes: feature
+    request #1306538.
+  * archivemail now expands wildcards in IMAP mailbox names.  For example, the
+    url imaps://user@server/foo/* will expand to all subfolders of foo.
+    Closes: feature request #1978540. Obsoletes: patch #1918937.
+
+Version 0.7.2   - 9 November 2007
+
+  * IMAP: fixed crash by working around python bug #1277098, which is still pending
+    in python << 2.5. 
+
+Version 0.7.1   - 7 November 2007
+
+  * Fixed incompatibility with Python 2.5 which broke Maildir handling.
+    Closes: #1670422
+  * Username and password in IMAP URLs can now be double-quoted, so it should be
+    no longer a problem if they contain delimiters like the '@' character. 
+    Closes: #1640878
+  * Invalid messages/files in Maildirs caused archivemail to silently stop
+    processing mails and claim it's all done.  Now skip these and go ahead. 
+    (Thanks Elan Ruusamäe for tracking this down.) Closes: #1783369.  
+    (The Debian package has a different fix for this problem since 0.6.1-4,
+    closing Debian bugs #255944 and #305902.)
+  * Fixed IMAP message flag conversion which was completely broken. (Thanks
+    Christian Brabandt)  Closes: Debian bug #434807
+  * New option --copy: archive mail, but don't delete it from the mailbox. 
+    This is mainly useful for testing purposes, and complements --delete.
+    Closes: #981865, #988803, #1764851, Debian bug #434798
+  * If running as root, only switch the effective uid and gid back if we have
+    actually switched them before. Closes: #1762907
+  * The automatic seteuid feature of archivemail is insecure and thus
+    deprecated; it will be removed from later versions. 
+  * Expand tilde in argument of long option --pwfile. (Thanks Christian
+    Brabandt) Closes: Debian bug #434813
+  * archivemail now accepts --days=0 
+  * Fixed crash if --warn-duplicate is used with IMAP (Thanks Christian
+    Brabandt) Closes: Debian bug #434786 (the Debian package already has a fix)
+  * When converting from other formats to mbox, archivemail used to preserve
+    existing 'Status' and 'X-Status' mbox headers; these are now silently
+    overwritten to ensure they have correct values.
+  * IMAP: if selecting the mailbox fails, archivemail detects the server's
+    mailbox hierarchy delimiter, replaces slashes in the mailbox name with the
+    delimiter and tries again. Closes: #1826757, Debian bug #368112
+
+Version 0.7.0   - 2 November 2006
+  * Fixed long options --filter-append and --pwfile to accept their arguments.
+    Closes: #1555935
+  * Fixed From_ line generation to actually look for the 'Return-path' and
+    'From' headers.  Closes: #1555797
+  * Fixed IMAP authentication/URL parsing, which wasn't working at all in
+    v0.6.2.  Require username encoded in URL, but be flexible with the password:
+    handle both --pwfile and URL-encoded password, and fallback to querying the
+    user if neither is present.  Closes: #1555951
+  * Convert on-the-wire CRLF to native EOL when saving messages from an IMAP
+    folder.  Closes: #1555803
+  * Updated man page.  This also addresses #1555951
+  * Fixed unittest failure by updating --suffix testcase.  Based on analysis by
+    Peter Poeml.  Thanks, Peter. 
+  * Fixed invalid IMAP filter string for large messages (--size option).
+    (Thanks to the anonymous bug reporter)  Closes: #863813
+  * Fixed IMAP --dry-run so it doesn't download all messages that would be
+    archived.  
+  * Fixed IMAP --delete which didn't work at all.  (Thanks Anand)  
+    Closes: Debian bug #203282
+  * Terminate each message in newly written mbox with an empty line if the
+    message source is not an mbox-format folder.  (Thanks  Chung-chieh Shan)
+    Closes: Debian bug #250410
+  * Mangle From_ in message body if the message source is not an mbox-format
+    folder.  (Thanks Chung-chieh Shan)  Closes: Debian bug #250402
+  * Added new option --dont-mangle to turn off From_ mangling.
+  * Bumped Python dependency to version 2.3.
+  * Fixed unittest TestMboxExclusiveLock which failed on Solaris.  (Thanks Paul
+    Rodger)  Closes: #904652
+  * Fixed unsafe creation of temporary files in the test suite.
+    This addresses Debian bug #385253, and reading the BTS log, it seems this
+    issue was assigned CVE-2006-4245, although I cannot find any further
+    reference to that CVE.  Note that the bug was initially reported to affect
+    archivemail itself, too.  This is not correct.  (Thanks Joey Hess)
+    Closes: Debian bug #385253
+  * Fixed cleanup of temporary files after test suite failures. 
+  * Fixed dotlocking race condition. 
+  * Stats are now working with IMAP.
+  * Stats now report the total size of a mailbox and of the archived messages
+    therefrom.  
+  * Always barf if the archive destination directory is world-writable.
+  * Distributing man page with the tarball again and fixed distutils setup.
+    Closes: #1574720 (Thanks Grant Goodyear)
+  * Improved IMAP error reporting
+
+Version 0.6.2   - 27 June 2006
+  * add -F/--filter-append option to append an arbitrary string to the IMAP 
+    filter string
+  * don't delete more than a certain number of messages at a time. The max 
+    command len is limited. Fixes bug 942403 (Archiving large IMAP folders fails)
+  * IMAP: try CRAM-MD5 login first, if that fails fallback to plain login
+  * add SSL support per imaps URL (after patch by Tobias Gruetzmacher)
+  * add -P/--pwfile option to supply the IMAP password, so it does not end up in 
+    the shell history
+  * Fix SyntaxWarning: assignment to None (bug #843890)
+  * Use the archive cut date rather than the actual time with the --suffix
+    option. (Thanks Manuel Estrada Sainz)
+
+Version 0.6.1   - 31 October 2002
+  * Removed a test rule that we could archive messages older than the 
+    Unix epoch. Newer versions of python now give an overflow error calling
+    mktime() on dates < 1970 instead of returning a negative number.
+
+Version 0.6.0   - 3 October 2002
+  * Added IMAP mailbox support. (Thanks Mark Roach)
+
+Version 0.5.1   - 18 September 2002
+  * Fixed a bug where when running archivemail as root on a non-root mailbox,
+    the temporary container directory would be created as root before the
+    seteuid() took place. (Thanks Jay Hesselberth)
+
+Version 0.5.0   - 15 September 2002
+  * Fixed a bug where mailbox locking would fail under Solaris. (Thanks Mark
+    Sheller)
+  * Fixed a bug where archiving maildir mailboxes without a 'Received Date' or
+    'From' header would fail. (Thanks Hugo van der Merwe)
+  * Removed yet another bug where messages dated on the Unix epoch would fail.
+
+Version 0.4.9   - 18 August 2002
+  * Fixed a bug where an exception was thrown if a message was dated exactly
+    on the Unix epoch.
+  * Fixed a bug where trailing slashes on the end of maildir/MH mailbox
+    arguments were being used in the archive name.
+
+Version 0.4.8   - 20 May 2002
+  * Call mkdir() to create a container directory in which we can place any
+    created tempfiles 
+
+Version 0.4.7   - 9 May 2002
+  * Fixed a bug where archivemail would abort if it received a date header
+    with a completely blank value.
+
+Version 0.4.6   - 6 May 2002
+  * Fixed a bug where the os.rename() calls could fail if we were moving
+    temporary files across different filesystems/partitions.
+
+Version 0.4.5   - 29 April 2002
+  * Fixed a bug where if you used the '--delete' option to completely clean
+    an mbox mailbox you would get a python error.
+  * Added a lot more testing to test_archivemail.py (test_archivemail.py is
+    now 37% bigger than archivemail -- scary)
+  * Added a new '--size' option which allows you to only archive messages 
+    over a certain size.
+
+Version 0.4.4   - 27 April 2002
+  * Fixed a bug where the long --suffix option was not working (although the 
+    short option, '-s' was).
+  * Added time-based format directives to the --suffix option, so that you 
+    can do things like specify --suffix='%B%Y' to create archives named
+    after the current month and year
+  * Added some more tests to test_archivemail.py
+
+Version 0.4.3   - 26 April 2002
+  * Fixed a couple of bugs where I was using python version 2.2 syntax that
+    was giving errors in python v2.0 and v2.1. 
+  * Changed the python requirements for the test script from python version
+    2.0 to version 2.1. This is because the unittest module is only available
+    in version 2.1 and above.
+
+Version 0.4.2   - 24 April 2002
+  * Added the ability to archive messages older than a given absolute date 
+    with the new option '--date'.
+  * Fixed a bug where archivemail would complain about messages older than 
+    1970. Yes, someone had a 'Date' header with 1967 :)
+  * Complain if the mailbox to be read does not look like a valid mbox-format
+    mailbox.
+  * Added a few more tests to test_archivemail.py
+
+Version 0.4.1   - 21 April 2002
+  * Don't archive messages that are flagged important unless we are given the
+    --include-flagged option. 
+  * Fixed a bug where when archiving messages from maildir mailboxes, we were
+    not preserving the status information contained in the filename suffix to
+    Status and X-Status mbox headers. This means we forgot if we had read or 
+    replied to the message.
+  * We now complain if an mbox-format mailbox that is being read changes in 
+    size -- this should not happen, since we have locked these files, but it
+    is a good sanity check.
+  * Changed from using the mailbox.PortableUnixMailbox class to read mbox 
+    mailboxes to the mailbox.UnixMailbox class. This fixes bugs where unquoted
+    'From ' lines in the body of messages were confusing archivemail.
+
+Version 0.4.0   - 17 April 2002
+  * Added an option --no-compress to make archives but not compress them with  
+    gzip.
+  * Added an option --preserve-unread to not archive unread messages.
+  * Added a few more unittests.
+
+Version 0.3.2   - 13 April 2002
+  * Added a lot more information to the manpage, including examples and 
+    notes.
+  * Fixed up the README file and archivemail usage message.
+  * Added an example archivemail shell script that I run from crontab.
+
+Version 0.3.1   - 12 April 2002
+  * Stopped calling 'gzip' externally and started using the gzip library
+    so that we can append to a copy of the gzip archive directly. 
+  * Removed 'bzip2' and 'compress' options since they are increasing
+    complexity without adding much, and needed to be called externally.
+    Maybe when python gets a bzip2 library I will add back an option to 
+    compress archives using bzip2.
+  * Included a man page & sgml docbook source.
+
+Version 0.3.0   - 11 April 2002
+  * We now preserve the last-accessed and last-modified timestamps correctly
+  * We now preserve the correct permissions on the original mailbox instead
+    of always mode 600
+  * Fixed a bug where lockfiles were being created that were not
+    world-readable
+  * Made archivemail work better when used as a python module so it can
+    integrate better with unittest. (... although I still distribute it 
+    without the .py extension - dodgy?)
+  * Bundled a unit-testing script for archivemail 
+  * Started using a distutils 'setup.py' script for installation.
+
+Version 0.2.1   - 4 April 2002
+  * Since we might not have a parse-able 'Date-Received' or 'Date' field,
+    use 5 different ways to guess the date of a message. 
+  * Removed the '--use-mtime' option since it is obsolete -- we will always
+    use the file modification time for the message if other date-parsing
+    methods fail.  
+  * Check to see if we are running as root -- if so, change our
+    effective userid and groupid to that of the original mailbox. This will 
+    make sure any archives or tempfiles we write have the same ownership and 
+    will allow the root user to do "archivemail /var/spool/mail/*"
+  * Fixed a bug where if you ran 'archivemail.py foo/mbox' it would create 
+    the archive file in the current directory instead of the directory 'foo'.
+
+Version 0.2.0   - 3 April 2002
+  * Added support for reading from MH mailboxes
+  * Refuse to proceed if we would be making tempfiles in world-writable
+    directories
+  * Clamped down with lots of assert()s checking function parameters
+  * Complain earlier if we do not have permission to write to the output
+    directory
+  * Use the 'Date' field of a message when constructing the 'From_' line
+    from a maildir/MH mailbox if there is no 'Delivery-Date' field.
+
+Version 0.1.0   - 31 March 2002
+  * Initial release

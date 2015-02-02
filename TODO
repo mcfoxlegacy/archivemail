@@ -1,0 +1,103 @@
+Integrate --debug-imap option into yet-to-be-implemented -vv switch? 
+I had the idea to provide separate debugging info levels anyway, see --debug
+below.
+
+Gracefully close IMAP connection upon unexptected error (currently archivemail
+just terminates). 
+
+LOCKING & Co:
+* Block signals while writing changed mailbox back.
+* Double-check the entire locking code. 
+
+Seems like existing archives are not read or validated in any way.  New archive
+data is blindly appended...  Probably okay, but should be documented. 
+
+IMAP SEARCH BEFORE disregards time and timezone information.  This should at
+least be documented.  E.g. I've found that '-d 0' didn't match all messages in
+an IMAP mailbox.  This is because the SEARCH key is (BEFORE 14-Nov-2007) on 14
+November, not matching messages that arrived today.  (This problem is probably 
+fixed for most use cases by the --all option.) 
+
+Document mbox format issues: link to
+http://homepages.tesco.net/~J.deBoynePollard/FGA/mail-mbox-formats.html, 
+qmail mbox manpage, Debian manpage, RFC 4155.  Document what mbox format we can
+read, and what we write. 
+FIXME: we cannot yet parse rfc 2822 addr-spec stuff like quoted local-parts in
+return-path addresses.
+
+Minor annoyance: when a From_ line is generated, guess_delivery_time() reports
+the used date header a second time. 
+
+Check sf.net and Debian BTS for new bugs.  Again.
+
+IMAP: ensure mailbox archives are properly named.  Currently imap folder names
+are mapped like this:
+
+  IMAP URL    |  resulting mbox_archive
+  ------------+------------------------
+  test.box    |  test.box_archive.gz
+  test/box    |  box_archive.gz
+
+
+Implement --include-draft.  But before, think about it again.  (This is feature
+request #1569305.)
+
+Implement a fallback if an IMAP server doesn't support SEARCH. (Ouch!)
+
+Add IMAP tests to the testsuite (upload test messages with IMAP "APPEND
+date-string").  This should be done without any real network I/O.
+
+Try to port archivemail to email.message and the new mailboxes in Python 2.5.
+Is these flexible enough for our needs?
+
+Line out what we want with respect to multiple selection criteria. 
+Some make sense, but this easily gets too complex, and if only it's a hassle
+with adding all the options.  Hm.  
+
+Reject patch #1036022 "Added option to inverse date compare" after cooling down
+because the patch is both stupid (copy+paste code) and broken.  Don't see why
+anyone should want this/we should support it. 
+If this is reasonable *at all*, I think we'd better go for all the complexity
+to honour _two_ cut off dates (see Debian bug "#184124: archivemail: -D and -d
+should not be incompatible", which is a comparably half-baken thought). </rant>
+
+Add --debug or -vv switch, and move the printing of diagnostic info for each
+message to --debug.  
+
+Perhaps add some more nice stuff like printing of subject, sender... 
+See tracker #868714 "added stats option to archivemail", which has a point.
+Message-Ids are useful for diagnosis, but not very nice to read for humans. 
+
+Be a nicer citizen with respect to mailbox locking. 
+
+Perhaps prune/shorten IMAP mailbox URLs in messages?
+They may be quite long and may contain the sensitive password.
+Also shows up in the process list... 
+Perhaps find a clean, lean replacement for all that clutter in the IMAP urls.
+
+Require --output-dir for IMAP archiving?  Otherwise we just drop the archive in
+in the current working directory.
+
+Check all items below, which are from the original author. :-)
+
+.archivemailrc support
+
+When you get a file-not-found in the 6th mailbox of 10, it aborts the whole
+run. Better to fail gracefully and keep going.
+
+Add more tests (see top of test_archivemail)
+
+We need some better checking to see if we are really looking at a valid
+mbox-format mailbox.
+
+Add an option to not cut threads.
+
+Add MMDF mailbox support
+
+Add Babyl mailbox support
+
+Add option to archive depending on mailbox size threshold 
+- is this a good idea?
+
+Add option to archive depending on number of messages
+- is this a good idea?

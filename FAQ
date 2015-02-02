@@ -1,0 +1,15 @@
+
+1. Why doesn't archivemail support bzip2 compression in addition to gzip?
+-------------------------------------------------------------------------
+
+The bzip2 module in Python 2.x is not fully compatible with the gzip module,
+and cannot be used with the current implementation of compressed mailbox
+support in archivemail.  See Python feature request #5863 for details.
+
+2. Can you add a switch to archive mailboxes greater than a certain size?
+-------------------------------------------------------------------------
+
+If you are using mbox format mailboxes instead, use the find(1) command instead, it is more flexible:
+
+    find $HOME/Mail -type f ! -name '*archive*' 
+

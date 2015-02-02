@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# This is an example shell script I use from my crontab(5) file to selectively
+# archive some of my mailboxes. Most of these mailboxes come directly from 
+# procmail and are in maildir-format -- not that it should really matter.
+#
+# I probably could have done them all as:
+#    $ARCMAIL $HOME/Mail/* 
+# ...if I had enough disk space to keep mail uncompressed for 180 days :)
+#
+set -e
+
+ARCMAIL="/usr/local/bin/archivemail --quiet --output-dir=$HOME/Mail/Archive/ "
+
+$ARCMAIL --days 14 $HOME/Mail/debian-user \
+                   $HOME/Mail/linux-kernel \
+                   $HOME/Mail/python-list \
+                   $HOME/Mail/spam-l
+
+$ARCMAIL --days 30 --delete $HOME/Mail/duplicates
+
+$ARCMAIL --days 90 $HOME/Mail/bugtraq \
+                   $HOME/Mail/debian-devel \
+                   $HOME/Mail/debian-mentors \
+                   $HOME/Mail/spam 
+
+$ARCMAIL $HOME/Mail/cm-melb \
+         $HOME/Mail/exsouthrock \
+         $HOME/Mail/received \
+         $HOME/Mail/sent \
+         $HOME/Mail/vim
